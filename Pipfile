@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "*"
+boto3 = "*"
+ijson = "*"
+zeep = "*"
+spp-logger = {git = "https://github.com/ONSdigital/spp-logger"}
+
+[dev-packages]
+pytest = "*"
+requests_mock = "*"
+moto = "*"
+
+[requires]
+python_version = "3.8"

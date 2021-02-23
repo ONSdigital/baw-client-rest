@@ -1,0 +1,14 @@
+.vscode
+00-pytest-output-tmp.py
+package.zip
+function.zip
+layer.zip
+.DS_Store
+.terraform
+v-env
+test-env
+terraform.tfstate
+terraform.tfstate.backup
+.idea
+__pycache__
+test-env

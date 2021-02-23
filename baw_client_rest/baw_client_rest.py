@@ -26,14 +26,30 @@ class Client:
 
     CSRF_CACHE = None
 
-    def __init__(self, username, password, logger):
+    def __init__(self, username, password, logger, url=None, csrf_url=None, cache=None):
         self.username = username
         self.password = password
         self.logger = logger
 
-        self.url = self._getenv("BAW_ENDPOINT")
-        self.csrf_cache = self._getenv("CSRF_CACHE")
-        self.baw_csrf_url = self._getenv("BAW_CSRF_URL")
+        self.url = url
+        if url is None:
+            self.url = self._getenv("BAW_ENDPOINT")
+
+        self.baw_csrf_url = csrf_url
+        if csrf_url is None:
+            self.baw_csrf_url = self._getenv("BAW_CSRF_URL")
+        self._setup_dynamo_cache(cache, logger)
+
+    def _setup_dynamo_cache(self, cache, logger):
+        if cache is None:
+            csrf_cache = getenv("CSRF_CACHE")
+            if csrf_cache is None:
+                logger.info(
+                    "No cache name provided, dynamo db csrf caching is disabled"
+                )
+            else:
+                self.dynamo_client = boto3.client("dynamodb")
+        self.dynamo_cache = csrf_cache
 
     def send_request(self, message):
         """Send a JSON object to the provided BAW endpoint"""
@@ -58,9 +74,9 @@ class Client:
     def _check_token(self):
         """Implements TTL-based local, remote DynamoDB and fallback caching
         for BAW (BPM) CSRF tokens"""
+        now = int(time.time())
 
         # Check for csrf token cached as class attribute
-        now = int(time.time())
         csrf_cache = Client.CSRF_CACHE
         if csrf_cache is not None:
             if csrf_cache["expiration"] > now:
@@ -68,24 +84,13 @@ class Client:
                 return csrf_cache["csrf_token"]
 
         # Check for csrf token cahed in dynamo DB
-        try:
-            client = boto3.client("dynamodb")
-            response = client.get_item(
-                TableName=self.csrf_cache,
-                Key={"user": {"S": self.username}},
-                ProjectionExpression="csrf_token, expires",
-            )
-            if response and response.get("Item"):
-                csrf_cache = {
-                    "expiration": int(response["Item"]["expires"]["N"]),
-                    "csrf_token": response["Item"]["csrf_token"]["S"],
-                }
+        if self.dynamo_cache is not None:
+            csrf_cache = self._get_csrf_from_dynamo(now)
+            if csrf_cache is not None:
                 if csrf_cache["expiration"] > now:
-                    self.logger.debug("Retrieved CSRF token from DynamoDB cache")
+                    self.logger.debug("Retrieved CSRF token from dynamodb")
                     Client.CSRF_CACHE = csrf_cache
                     return csrf_cache["csrf_token"]
-        except (ClientError, KeyError) as error:
-            self.logger.error("Failed to access dynamodb cache", exc_info=error)
 
         # Retrieve a new CSRF token from BAW
         try:
@@ -113,8 +118,31 @@ class Client:
         Client.CSRF_CACHE = csrf_cache
 
         # Cache csrf token in dynamo DB
+        if self.dynamo_cache is not None:
+            self.save_csrf_to_dynamo(csrf_cache)
+
+        return csrf_cache["csrf_token"]
+
+    def _get_csrf_from_dynamo(self, now):
         try:
-            response = client.put_item(
+            response = self.dynamo_client.get_item(
+                TableName=self.dynamo_cache,
+                Key={"user": {"S": self.username}},
+                ProjectionExpression="csrf_token, expires",
+            )
+            if response and response.get("Item"):
+                csrf_cache = {
+                    "expiration": int(response["Item"]["expires"]["N"]),
+                    "csrf_token": response["Item"]["csrf_token"]["S"],
+                }
+                return csrf_cache
+            return None
+        except (ClientError, KeyError) as error:
+            self.logger.error("Failed to access dynamodb cache", exc_info=error)
+
+    def _save_csrf_to_dynamo(self, csrf_cache):
+        try:
+            response = self.dynamo_client.put_item(
                 TableName=self.csrf_cache,
                 Item={
                     "user": {"S": self.username},
@@ -126,5 +154,3 @@ class Client:
 
         except ClientError as error:
             self.logger.error("Failed to cache CSRF token in dynamodb", exc_info=error)
-
-        return csrf_cache["csrf_token"]

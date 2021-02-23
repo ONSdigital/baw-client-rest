@@ -6,9 +6,6 @@ name = "pypi"
 [packages]
 requests = "*"
 boto3 = "*"
-ijson = "*"
-zeep = "*"
-spp-logger = {git = "https://github.com/ONSdigital/spp-logger"}
 
 [dev-packages]
 pytest = "*"

@@ -26,14 +26,13 @@ class Client:
 
     CSRF_CACHE = None
 
-    def __init__(self, username, password, logger):
+    def __init__(self, username, password, endpoint, crf_endpoint, cache_name, logger):
         self.username = username
         self.password = password
+        self.url = endpoint
+        self.baw_csrf_url = crf_endpoint
+        self.csrf_cache = cache_name
         self.logger = logger
-
-        self.url = self._getenv("BAW_ENDPOINT")
-        self.csrf_cache = self._getenv("CSRF_CACHE")
-        self.baw_csrf_url = self._getenv("BAW_CSRF_URL")
 
     def send_request(self, message):
         """Send a JSON object to the provided BAW endpoint"""
@@ -48,12 +47,6 @@ class Client:
             raise ConnectionError(
                 f"Filed to send message to BAW with status code: {task_resp.status_code}, and response: {task_resp.text}"
             )
-
-    def _getenv(self, key):
-        env_var = getenv(key)
-        if env_var is None:
-            raise ConnectionError(f"Could not connect to BAW: {key} env var not set")
-        return env_var
 
     def _check_token(self):
         """Implements TTL-based local, remote DynamoDB and fallback caching

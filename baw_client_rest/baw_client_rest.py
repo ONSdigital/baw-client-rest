@@ -14,23 +14,20 @@ class Client:
     Manages retrieving and caching CSRF tokens,
     and provides a simple method for sending messages to BAW: send_request
 
-    The following env vars must be set:
-    BAW_ENDPOINT - the endpoint to which you wish to send a message,
-    CSRF_CACHE - the name of the DYnamoDB table used as a csrf cache,
-    BAW_CSRF_URL - the BAW endpoint for retrieving CSRF tokens
-
-    To instantiate provide a BAW username and Password, and a logger.
+    To instantiate provide a BAW username and Password, the rest endpoint,
+    the endpoint from which your csrf token will be retrieved,
+    the name of a dynamo db table for csrf caching and a logger.
 
     All logs will be sent to the provided logger
     """
 
     CSRF_CACHE = None
 
-    def __init__(self, username, password, endpoint, crf_endpoint, cache_name, logger):
+    def __init__(self, username, password, endpoint, csrf_endpoint, cache_name, logger):
         self.username = username
         self.password = password
         self.url = endpoint
-        self.baw_csrf_url = crf_endpoint
+        self.baw_csrf_url = csrf_endpoint
         self.csrf_cache = cache_name
         self.logger = logger
 

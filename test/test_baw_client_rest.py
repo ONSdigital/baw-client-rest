@@ -7,12 +7,19 @@ import boto3
 def test_happy_path(working_setup):
     # CSRF token is retrieved and a message sent to the endpoint
     logger = logging.getLogger()
-    client = Client("user", "pw", logger)
+    client = Client(
+        username="user",
+        password="pw",
+        endpoint="https://example.com/endpoint",
+        csrf_endpoint="https://example.com/csrf",
+        cache_name="bpm-csrf-cache-unit-testing",
+        logger=logger,
+    )
     client.send_request({"body": "message_to_baw"})
-    assert working_setup.request_history[0].url == os.getenv("BAW_CSRF_URL")
+    assert working_setup.request_history[0].url == "https://example.com/csrf"
     assert working_setup.request_history[0].json() == {"requested_lifetime": 7200}
 
-    assert working_setup.request_history[1].url == os.getenv("BAW_ENDPOINT")
+    assert working_setup.request_history[1].url == "https://example.com/endpoint"
     assert working_setup.request_history[1].headers["BPMCSRFToken"] == "test_token_1"
     assert working_setup.request_history[1].json() == {"body": "message_to_baw"}
 
@@ -25,9 +32,16 @@ def test_local_caching(working_setup, caplog):
 
     # making an initial call
     logger = logging.getLogger()
-    client = Client("user", "pw", logger)
+    client = Client(
+        username="user",
+        password="pw",
+        endpoint="https://example.com/endpoint",
+        csrf_endpoint="https://example.com/csrf",
+        cache_name="bpm-csrf-cache-unit-testing",
+        logger=logger,
+    )
     client.send_request({"body": "message_to_baw"})
-    assert working_setup.request_history[0].url == os.getenv("BAW_CSRF_URL")
+    assert working_setup.request_history[0].url == "https://example.com/csrf"
     assert working_setup.request_history[0].json() == {"requested_lifetime": 7200}
     assert working_setup.request_history[1].headers["BPMCSRFToken"] == "test_token_1"
     assert working_setup.request_history[1].json() == {"body": "message_to_baw"}
@@ -38,7 +52,14 @@ def test_local_caching(working_setup, caplog):
     assert working_setup.request_history[2].json() == {"body": "message_to_baw_2"}
 
     # Same CSRF token is re-used even if class is re-instantiated
-    client = Client("user", "pw", logger)
+    client = Client(
+        username="user",
+        password="pw",
+        endpoint="https://example.com/endpoint",
+        csrf_endpoint="https://example.com/csrf",
+        cache_name="bpm-csrf-cache-unit-testing",
+        logger=logger,
+    )
     client.send_request({"body": "message_to_baw_3"})
     assert working_setup.request_history[3].headers["BPMCSRFToken"] == "test_token_1"
     assert working_setup.request_history[3].json() == {"body": "message_to_baw_3"}
@@ -59,7 +80,14 @@ def test_local_caching(working_setup, caplog):
 def test_dynamo_caching(working_setup):
     logger = logging.getLogger()
     Client.CSRF_CACHE = None
-    client = Client("user", "pw", logger)
+    client = Client(
+        username="user",
+        password="pw",
+        endpoint="https://example.com/endpoint",
+        csrf_endpoint="https://example.com/csrf",
+        cache_name="bpm-csrf-cache-unit-testing",
+        logger=logger,
+    )
     client.send_request({"body": "message_to_baw"})
     assert working_setup.request_history[1].headers["BPMCSRFToken"] == "test_token_1"
     assert working_setup.request_history[1].json() == {"body": "message_to_baw"}

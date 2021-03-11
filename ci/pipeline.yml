@@ -1,0 +1,25 @@
+
+resources:
+- name: baw-client-rest
+  type: git
+  icon: github-circle
+  source:
+    uri: https://github.com/ONSdigital/baw-client-rest
+    branch: master
+    username: ((github.access_token))
+    password: x-oauth-basic
+
+jobs:
+- name: lint
+  plan:
+  - get: baw-client-rest
+    trigger: true
+  - task: lint
+    file: baw-client-rest/ci/tasks/lint.yml
+
+- name: unit-test
+  plan:
+  - get: baw-client-rest
+    trigger: true
+  - task: unit-test
+    file: baw-client-rest/ci/tasks/test.yml

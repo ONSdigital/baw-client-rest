@@ -1,7 +1,7 @@
 # baw-client-rest
-Python client for making REST requests to BAW from aws lambdas.
+Python client for making REST requests to BAW from an AWS Lambda.
 
-requires a dynamo db table to cache the csrf token retrieved from BAW.
+This requires a DynamoDB table to cache the CSRF token retrieved from BAW.
 
 # Installation
 The package can be installed using
@@ -26,9 +26,9 @@ Instantiating the client requires the following arguments:
 
 **url**: *string* - the BAW endpoint you wish to connect to.
 
-**baw_csrf_url**: *string* - the url that provides your baw CSRF tokens.
+**baw_csrf_url**: *string* - the url that provides your BAW CSRF tokens.
 
-**csrf_cache**: *string* - the name of the Dynamo db table where you will cache your csrf token.
+**csrf_cache**: *string* - the name of the DynamoDB table where you will cache your CSRF token.
 
 **logger**: *python logger or child class instance* - the logger that you wish to direct logs to.
 
@@ -39,7 +39,7 @@ where client_instance is an instance of the Client class, and message is the mes
 
 # CSRF table setup
 This client requires a
- dynamo db table, to cache the csrf token from BAW. This can be set up as follows using terraform: (where your-resource-name is the name you wish to use for your csrf cache table)
+ DynamoDB table, to cache the CSRF token from BAW. This can be set up as follows using terraform: (where your-resource-name is the name you wish to use for your CSRF cache table)
 ```
 resource "aws_dynamodb_table" "csrf_table" {
   name         = "your-resource-name"
@@ -55,4 +55,4 @@ resource "aws_dynamodb_table" "csrf_table" {
   }
 }
 ```
-You will also need to add appropriate permissions to this table in your lambda.
+You will also need to add appropriate permissions to this table in the lambda.

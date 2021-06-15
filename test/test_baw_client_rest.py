@@ -28,7 +28,7 @@ def test_local_caching(working_setup, caplog):
     # delete the dynamo table so that only local caching is active
     conn = boto3.client("dynamodb")
     conn.delete_table(TableName="bpm-csrf-cache-unit-testing")
-    Client.CSRF_CACHE = None
+    CSRF_CACHE = Client.CSRF_CACHE = {"csrf_token": None, "expiration": None}
 
     # making an initial call
     logger = logging.getLogger()
@@ -64,7 +64,7 @@ def test_local_caching(working_setup, caplog):
     assert working_setup.request_history[3].headers["BPMCSRFToken"] == "test_token_1"
     assert working_setup.request_history[3].json() == {"body": "message_to_baw_3"}
 
-    Client.CSRF_CACHE = None
+    CSRF_CACHE = Client.CSRF_CACHE = {"csrf_token": None, "expiration": None}
     # New csrf token retrieved if cache is destroyed
     client.send_request({"body": "message_to_baw_4"})
     assert working_setup.request_history[5].headers["BPMCSRFToken"] == "test_token_2"
@@ -79,7 +79,7 @@ def test_local_caching(working_setup, caplog):
 
 def test_dynamo_caching(working_setup):
     logger = logging.getLogger()
-    Client.CSRF_CACHE = None
+    CSRF_CACHE = Client.CSRF_CACHE = {"csrf_token": None, "expiration": None}
     client = Client(
         username="user",
         password="pw",
@@ -93,7 +93,7 @@ def test_dynamo_caching(working_setup):
     assert working_setup.request_history[1].json() == {"body": "message_to_baw"}
 
     # Uses cached csrf token even if local cache is cleared
-    Client.CSRF_CACHE = None
+    CSRF_CACHE = Client.CSRF_CACHE = {"csrf_token": None, "expiration": None}
     client.send_request({"body": "message_to_baw_2"})
     assert working_setup.request_history[2].headers["BPMCSRFToken"] == "test_token_1"
     assert working_setup.request_history[2].json() == {"body": "message_to_baw_2"}

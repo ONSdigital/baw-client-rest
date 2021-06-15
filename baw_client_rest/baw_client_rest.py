@@ -1,7 +1,6 @@
 """Contains a simple client for BAW REST Endpoints"""
 
 import time
-from os import getenv
 from botocore.exceptions import ClientError
 import boto3
 import requests
@@ -21,7 +20,7 @@ class Client:
     All logs will be sent to the provided logger
     """
 
-    CSRF_CACHE = None
+    CSRF_CACHE = {"csrf_token": None, "expiration": None}
 
     def __init__(self, username, password, endpoint, csrf_endpoint, cache_name, logger):
         self.username = username
@@ -53,7 +52,7 @@ class Client:
         # Check for csrf token cached as class attribute
         now = int(time.time())
         csrf_cache = Client.CSRF_CACHE
-        if csrf_cache is not None:
+        if csrf_cache["csrf_token"] is not None:
             if csrf_cache["expiration"] > now:
                 self.logger.debug("Retrieved CSRF token from global variable")
                 return csrf_cache["csrf_token"]
@@ -100,7 +99,7 @@ class Client:
         csrf_cache = csrf_resp.json()
         # Subtracting 30 seconds to allow for bad clocks and latency
         csrf_cache["expiration"] = (csrf_cache["expiration"] - 30) + now
-        self.logger.debug("Recieved new CSRF token from BAW")
+        self.logger.debug("Received new CSRF token from BAW")
         Client.CSRF_CACHE = csrf_cache
 
         # Cache csrf token in dynamo DB

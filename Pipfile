@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 requests = "*"
 boto3 = "*"
+pylint = "*"
 
 [dev-packages]
 pytest = "*"
@@ -14,3 +15,6 @@ moto = "*"
 
 [requires]
 python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true

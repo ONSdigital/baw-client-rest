@@ -42,7 +42,8 @@ class Client:
         )
         if task_resp.status_code != 201:
             raise ConnectionError(
-                f"Filed to send message to BAW with status code: {task_resp.status_code}, and response: {task_resp.text}"
+                f"Failed to send message to BAW with status code: {task_resp.status_code},"
+                "and response: {task_resp.text}"
             )
 
     def _check_token(self):
@@ -84,8 +85,8 @@ class Client:
                 auth=(self.username, self.password),
                 json={"requested_lifetime": 7200},
             )
-        except (ConnectionError, RequestException) as e:
-            raise ConnectionError("Cannot get CSRF token")
+        except (ConnectionError, RequestException) as error:
+            raise ConnectionError("Cannot get CSRF token") from error
         if csrf_resp.status_code != 201:
             if csrf_resp.status_code == 200:
                 self.logger.error(

@@ -7,7 +7,7 @@ import requests
 from requests import RequestException
 
 
-class Client:
+class Client:  # pylint: disable=too-few-public-methods
     """
     Class to simplify connecting to the REST endpoints of BAW,
     Manages retrieving and caching CSRF tokens,
@@ -22,7 +22,9 @@ class Client:
 
     CSRF_CACHE = {"csrf_token": None, "expiration": None}
 
-    def __init__(self, username, password, endpoint, csrf_endpoint, cache_name, logger):
+    def __init__(
+        self, username, password, endpoint, csrf_endpoint, cache_name, logger
+    ):  # pylint: disable=too-many-arguments
         self.username = username
         self.password = password
         self.url = endpoint

@@ -1,4 +1,4 @@
-#!/bin/bas
+#!/bin/bash
 set -euo pipefail
 cd baw-client-rest
 python -m venv v-env

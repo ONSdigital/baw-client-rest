@@ -10,7 +10,7 @@ resources:
     icon: github
     check_every: 1m
     source:
-      repository: https://github.com/ONSdigital/baw-client-rest
+      repository: https://github.com/ONSdigital/baw-client-rest.git
       access_token: ((shared-github.access_token))
       base_branch: main
       disable_forks: true
@@ -37,11 +37,12 @@ jobs:
 #     file: baw-client-rest/ci/tasks/lint.yml
 
 - name: unit-test
+  serial: true
   plan:
     - do:
       - get: pr-open
-          trigger: true
-          version: every
+        trigger: true
+        version: every
       - put: pr-open
         params:
           path: pr-open

@@ -1,14 +1,13 @@
 """Contains a simple client for BAW REST Endpoints"""
 
 import time
-from os import getenv
 from botocore.exceptions import ClientError
 import boto3
 import requests
 from requests import RequestException
 
 
-class Client:
+class Client:  # pylint: disable=too-few-public-methods
     """
     Class to simplify connecting to the REST endpoints of BAW,
     Manages retrieving and caching CSRF tokens,
@@ -21,9 +20,11 @@ class Client:
     All logs will be sent to the provided logger
     """
 
-    CSRF_CACHE = None
+    CSRF_CACHE = {"csrf_token": None, "expiration": None}
 
-    def __init__(self, username, password, endpoint, csrf_endpoint, cache_name, logger):
+    def __init__(
+        self, username, password, endpoint, csrf_endpoint, cache_name, logger
+    ):  # pylint: disable=too-many-arguments
         self.username = username
         self.password = password
         self.url = endpoint
@@ -42,7 +43,8 @@ class Client:
         )
         if task_resp.status_code != 201:
             raise ConnectionError(
-                f"Filed to send message to BAW with status code: {task_resp.status_code}, and response: {task_resp.text}"
+                f"Failed to send message to BAW with status code: {task_resp.status_code},"
+                "and response: {task_resp.text}"
             )
 
     def _check_token(self):
@@ -52,7 +54,7 @@ class Client:
         # Check for csrf token cached as class attribute
         now = int(time.time())
         csrf_cache = Client.CSRF_CACHE
-        if csrf_cache is not None:
+        if csrf_cache["csrf_token"] is not None:
             if csrf_cache["expiration"] > now:
                 self.logger.debug("Retrieved CSRF token from global variable")
                 return csrf_cache["csrf_token"]
@@ -84,8 +86,8 @@ class Client:
                 auth=(self.username, self.password),
                 json={"requested_lifetime": 7200},
             )
-        except (ConnectionError, RequestException) as e:
-            raise ConnectionError("Cannot get CSRF token")
+        except (ConnectionError, RequestException) as error:
+            raise ConnectionError("Cannot get CSRF token") from error
         if csrf_resp.status_code != 201:
             if csrf_resp.status_code == 200:
                 self.logger.error(
@@ -99,7 +101,7 @@ class Client:
         csrf_cache = csrf_resp.json()
         # Subtracting 30 seconds to allow for bad clocks and latency
         csrf_cache["expiration"] = (csrf_cache["expiration"] - 30) + now
-        self.logger.debug("Recieved new CSRF token from BAW")
+        self.logger.debug("Received new CSRF token from BAW")
         Client.CSRF_CACHE = csrf_cache
 
         # Cache csrf token in dynamo DB

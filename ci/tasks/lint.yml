@@ -1,0 +1,11 @@
+---
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: python
+    tag: 3.9-slim
+inputs:
+  - name: baw-client-rest
+run:
+  path: ./baw-client-rest/ci/tasks/lint.sh

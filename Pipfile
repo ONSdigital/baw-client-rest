@@ -11,6 +11,10 @@ boto3 = "*"
 pytest = "*"
 requests_mock = "*"
 moto = "*"
+pylint = "*"
 
 [requires]
 python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true
